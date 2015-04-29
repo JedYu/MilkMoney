@@ -57,8 +57,8 @@ def filter_long_under_shadow(dataset):
     if open < close:
         return False
 
-    if money >= int(dataset[1]['money']):
-        return
+    if  float(dataset[1]['money']) / float(money) < 1.5:
+        return False
 
     under = close - low
     up = high - close
@@ -154,7 +154,7 @@ def filter_doji(dataset):
     return False
 
 
-day = '2015-04-27'
+day = '2015-04-08'
 
 success = 0
 fail = 0
@@ -186,6 +186,7 @@ for stock in stocks.find():
                 else:
                     print  next
     except:
+        print 'xxxxxxxxxxxxxx'
         pass
 
 print '==========================================================='
