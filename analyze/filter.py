@@ -2,6 +2,7 @@
 import time, datetime, math
 from pyquery import PyQuery as pq
 from pymongo import MongoClient, DESCENDING, ASCENDING
+from holiday import holidays
 
 client = MongoClient('192.168.51.149', 27017)
 db = client.stock
@@ -19,175 +20,141 @@ def is_inactive(day, dataset):
 
     return xday.ctime() != yday.ctime()
 
+class Stock(object):
+    __slots__ = {"code","day", "open", "close", "high", "low", "money"}
 
-def filter_long_under_shadow(dataset):
-    '''
-    下跳空 下长影线
-    :param dataset:
-    :return:
-    '''
-    if len(dataset) < 3:
-        return False
+class Prediction:
+    _collection = None
+    _code = None
+    _require_size = 7
+    def __init__(self, collection, code):
+        self._collection = collection
+        self._code = code
 
-    lastday = datetime.datetime.strptime(dataset[0]['day'], '%Y-%m-%d')
-    yestoday = datetime.datetime.strptime(dataset[1]['day'], '%Y-%m-%d')
+    def set_require_size(self,size):
+        self._require_size = size
 
-    if yestoday.ctime() < (lastday - datetime.timedelta(days=3)).ctime():
-        return False
+    def get_data(self, max_day):
+        l = list(self._collection.find({'code': self._code, "day": {"$lt": max_day}}).limit(self._require_size).sort([("day", DESCENDING)]))
+        if not l:
+            return None
 
+        ss = []
+        for d in l:
+            s = Stock()
+            s.code = self._code
+            s.day = d['day']
+            s.open = float(d['open'])
+            s.close = float(d['close'])
+            s.high = float(d['high'])
+            s.low = float(d['low'])
+            s.money = int(d['money'])
+            ss.append(s)
 
-    # if float(dataset[2]['close']) < float(dataset[1]['close']):
-    # return False
+        if len(ss) < self._require_size:
+            return False
+        return ss
 
-    open = float(dataset[0]['open'])
-    close = float(dataset[0]['close'])
-    high = float(dataset[0]['high'])
-    low = float(dataset[0]['low'])
-    money = int(dataset[0]['money'])
-
-    if open > float(dataset[1]['close']):
-        return False
-
-    # if close < float(dataset[1]['low']) :
-    # return False
-
-    if (float(dataset[1]['low']) - open ) / float(dataset[1]['low']) > 0.1:
-        return False
-
-    if open < close:
-        return False
-
-    if  float(dataset[1]['money']) / float(money) < 1.5:
-        return False
-
-    under = close - low
-    up = high - close
-    if up == 0:
-        if under > 0:
+    def is_holiday(self, day):
+        d = datetime.datetime.strptime(day, '%Y-%m-%d')
+        if d.isoweekday() not in [1,2,3,4,5]:
             return True
+
+        if day in holidays:
+            return True
+
+        return False
+
+    def filter(self):
+
+        return[]
+
+
+class MorningStarPrediction(Prediction):
+    def __init__(self, collection, code):
+        self.set_require_size(3)
+        Prediction.__init__(self, collection, code)
+
+    def predict(self, day=None):
+        if self.is_holiday(day):
+            return False
+
+        ds = self.get_data(day)
+        if ds:
+            #第一天长阴线
+            if (ds[2].close - ds[2].open) / ds[2].open > -0.05:
+                return False
+
+            #第二天下跳
+            if ds[1].open >= ds[2].close:
+                return False
+
+            if ds[1].high > ds[2].low:
+                return False
+
+            if ds[0].close < ds[2].close:
+                return False
+
+            return True
+
         else:
             return False
 
-    if under / up > 2:
-        # print '',dataset[0]['day'], open,close,high,low,money
-        return True
-    else:
-        return False
 
 
-def filter_hold_line(dataset):
-    '''
-    抱线
-    :param dataset:
-    :return:
-    '''
-    if len(dataset) < 3:
-        return False
+class RisingStarPrediction(Prediction):
+    def __init__(self, collection, code):
+        self.set_require_size(7)
+        Prediction.__init__(self, collection, code)
 
-    lastday = datetime.datetime.strptime(dataset[0]['day'], '%Y-%m-%d')
-    yestoday = datetime.datetime.strptime(dataset[1]['day'], '%Y-%m-%d')
+    def predict(self, day=None):
+        if self.is_holiday(day):
+            return False
 
-    if yestoday.ctime() < (lastday - datetime.timedelta(days=3)).ctime():
-        return False
+        ds = self.get_data(day)
+        if ds:
 
-    open = float(dataset[0]['open'])
-    close = float(dataset[0]['close'])
-    high = float(dataset[0]['high'])
-    low = float(dataset[0]['low'])
-    money = int(dataset[0]['money'])
+            return True
 
-    yopen = float(dataset[1]['open'])
-    yclose = float(dataset[1]['close'])
-    yhigh = float(dataset[1]['high'])
-    ylow = float(dataset[1]['low'])
-    ymoney = int(dataset[1]['money'])
+        else:
+            return False
 
-    if yclose > yopen:
-        return False
-
-    if close < open:
-        return False
-
-    if close > yopen and open < close:
-        return True
-
-    return False
-
-
-def filter_doji(dataset):
-    '''
-    上升十字星
-    :param dataset:
-    :return:
-    '''
-    if len(dataset) < 5:
-        return False
-
-    lastday = datetime.datetime.strptime(dataset[0]['day'], '%Y-%m-%d')
-    yestoday = datetime.datetime.strptime(dataset[1]['day'], '%Y-%m-%d')
-
-    if yestoday.ctime() < (lastday - datetime.timedelta(days=3)).ctime():
-        return False
-
-    if float(dataset[2]['close']) < float(dataset[2]['open']) or float(dataset[1]['close']) < float(dataset[1][
-        'open']) or float(dataset[2]['close']) < float(dataset[3]['close']) or float(dataset[1]['close']) < float(
-            dataset[2]['close']) or float(dataset[3]['close']) < float(
-            dataset[4]['close']):
-        return False
-
-    open = float(dataset[0]['open'])
-    close = float(dataset[0]['close'])
-    high = float(dataset[0]['high'])
-    low = float(dataset[0]['low'])
-    money = int(dataset[0]['money'])
-
-    if open < float(dataset[1]['open']):
-        return False
-
-    if high == low:
-        return False
-
-    if math.fabs(open - close) / math.fabs(high - low) < 0.05:
-        print dataset[2]['close'], dataset[2]['open']
-        return True
-
-    return False
-
-
-day = '2015-04-08'
-
-success = 0
-fail = 0
-
+day = "2015-05-06"
 for stock in stocks.find():
+    p = MorningStarPrediction(history, stock['code'])
+    if p.predict(day):
+        print stock['code']
 
-    try:
-        dataset = list(history.find({'code': stock['code'], "day": {"$lte": day}}).limit(7).sort([("day", DESCENDING)]))
 
-        if is_inactive(day, dataset):
-            continue
+test = True
+if test:
 
-        prev_close = float(dataset[0]['close'])
-        if filter_long_under_shadow(dataset):
-            print stock['code'], stock['name']
+    xs = []
+    begin = datetime.date(2015,5,4)
+    for i in range(0, 200):
+        d = begin - datetime.timedelta(days=i)
 
-            if today != day:
-                next = \
-                    list(
-                        history.find({'code': stock['code'], "day": {"$gt": day}}).sort([("day", ASCENDING)]).limit(1))[
-                        0]
-                if next:
-                    pct = ((float(next['close']) - prev_close) / prev_close) * 100
-                    print next['day'], next['money'], next['close'], prev_close, '{:.1f}%'.format(pct)
-                    if pct >= 0:
-                        success += 1
-                    else:
-                        fail += 1
-                else:
-                    print  next
-    except:
-        print 'xxxxxxxxxxxxxx'
-        pass
+        for stock in stocks.find():
+            p = MorningStarPrediction(history, stock['code'])
+            if p.predict(str(d)):
+                xs.append((str(d), stock['code']))
 
-print '==========================================================='
-print u'预测成功：', success, u'预测失败：', fail
+    up = 0
+    down = 0
+    for x in xs:
+
+        s = list(history.find({'code': x[1], "day":x[0]}))
+        if s:
+            print x[0], x[1], s[0]["open"], s[0]["close"]
+            if float(s[0]["open"]) < float(s[0]["close"]):
+                up = up + 1
+            else:
+                down = down + 1
+
+    print up, down, up/(up+down)
+
+
+
+
+
+
