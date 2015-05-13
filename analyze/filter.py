@@ -4,7 +4,7 @@ from pyquery import PyQuery as pq
 from pymongo import MongoClient, DESCENDING, ASCENDING
 from holiday import holidays
 
-client = MongoClient('192.168.51.149', 27017)
+client = MongoClient('localhost', 27017)
 db = client.stock
 history = db.history
 stocks = db.stocks

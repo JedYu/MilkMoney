@@ -7,7 +7,7 @@ KEYS = ["day", "open", "high", "close", "low", "trade", "money"]
 URL_HISTORY = r'http://vip.stock.finance.sina.com.cn/corp/go.php/vMS_MarketHistory/stockid/{0}.phtml?year={1}&jidu={2}'
 
 
-client = MongoClient('192.168.51.149', 27017)
+client = MongoClient('localhost', 27017)
 db = client.stock
 stocks = db.stocks
 history = db.history
@@ -15,8 +15,8 @@ history.create_index([("day", DESCENDING), ("code", ASCENDING)], unique=True)
 
 
 def get_one(code):
-    for year in [2014, 2015]:
-        for qua in [1, 2, 3, 4]:
+    for year in [2015]:
+        for qua in [2]:
 
             print 'try to get', code, year, qua
             d = None
@@ -40,8 +40,11 @@ def get_one(code):
                 obj['code'] = code
                 for i, td in enumerate(tr.items('td')):
                     obj[KEYS[i]] = td.text()
-
-                history.update_one({'day':obj['day'], 'code':obj['code']}, {"$set": obj}, upsert=True)
+		
+		if not obj['day'].startswith('20'):
+		    continue
+                
+		history.update_one({'day':obj['day'], 'code':obj['code']}, {"$set": obj}, upsert=True)
             time.sleep(2)
 
 
