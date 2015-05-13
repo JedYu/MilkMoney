@@ -82,7 +82,7 @@ class MorningStarPrediction(Prediction):
         ds = self.get_data(day)
         if ds:
             #第一天长阴线
-            if (ds[2].close - ds[2].open) / ds[2].open > -0.05:
+            if (ds[2].close - ds[2].open) / ds[2].open > -0.04:
                 return False
 
             #第二天下跳
@@ -119,19 +119,19 @@ class RisingStarPrediction(Prediction):
         else:
             return False
 
-day = "2015-05-06"
+day = str(datetime.datetime.now().date())
 for stock in stocks.find():
     p = MorningStarPrediction(history, stock['code'])
     if p.predict(day):
         print stock['code']
 
 
-test = True
+test = False
 if test:
 
     xs = []
-    begin = datetime.date(2015,5,4)
-    for i in range(0, 200):
+    begin = datetime.date(2007,8,30)
+    for i in range(0, 400):
         d = begin - datetime.timedelta(days=i)
 
         for stock in stocks.find():
@@ -142,8 +142,7 @@ if test:
     up = 0
     down = 0
     for x in xs:
-
-        s = list(history.find({'code': x[1], "day":x[0]}))
+        s = list(history.find({'code': x[1], "day": {"$gte": x[0]}}).sort([("day", ASCENDING)]).limit(1))
         if s:
             print x[0], x[1], s[0]["open"], s[0]["close"]
             if float(s[0]["open"]) < float(s[0]["close"]):
@@ -151,7 +150,7 @@ if test:
             else:
                 down = down + 1
 
-    print up, down, up/(up+down)
+    print up, down, float(up)/float(up+down)
 
 
 
