@@ -120,6 +120,7 @@ class RisingStarPrediction(Prediction):
             return False
 
 day = str(datetime.datetime.now().date())
+day = "2015-05-25"
 for stock in stocks.find():
     p = MorningStarPrediction(history, stock['code'])
     if p.predict(day):

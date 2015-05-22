@@ -3,7 +3,7 @@ import time, datetime, math
 from pyquery import PyQuery as pq
 from pymongo import MongoClient, DESCENDING, ASCENDING
 
-client = MongoClient('192.168.51.149', 27017)
+client = MongoClient('localhost', 27017)
 db = client.stock
 history = db.history
 stocks = db.stocks
@@ -187,7 +187,7 @@ class MorningStarFilter(Filter):
 
 
 
-day = '2015-05-04'
+day = '2015-05-17'
 
 success = 0
 fail = 0
@@ -202,8 +202,6 @@ for stock in stocks.find():
 
         prev_close = float(dataset[0]['close'])
 
-        filter = MorningStarFilter(dataset)
-        filter.filter()
         if filter_long_under_shadow(dataset):
             print stock['code'], stock['name']
             l.append(stock['code'])
