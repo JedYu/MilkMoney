@@ -3,7 +3,7 @@ import time
 from pyquery import PyQuery as pq
 from pymongo import MongoClient, ASCENDING, DESCENDING
 
-KEYS = ["day", "open", "high", "close", "low", "trade", "money"]
+KEYS = ["day", "open", "high", "close", "low", "volume", "amount"]
 URL_HISTORY = r'http://vip.stock.finance.sina.com.cn/corp/go.php/vMS_MarketHistory/stockid/{0}.phtml?year={1}&jidu={2}'
 
 

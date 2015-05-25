@@ -16,8 +16,7 @@ history = db.history
 def appendItem(data):
     fields = data['fields']
     items = data['items']
-    dt = datetime.datetime.strptime(data['day'],'%Y-%m-%d') + datetime.timedelta(days = 1)
-    day =  dt.strftime('%Y-%m-%d')
+    day = data['day']
     for item in items:
         obj = {}
         obj['day'] = day
@@ -42,8 +41,8 @@ def appendItem(data):
         h["high"] = obj["high"]
 	h["low"] = obj["low"]
 	h["close"] = obj["trade"]
-	h["trade"] = obj["volume"]
-	h["money"] = obj["amount"]
+	h["volume"] = obj["volume"]
+	h["amount"] = obj["amount"]
         history.update_one({'day':day, 'code':obj['code']}, {"$set": h}, upsert=True)
 
 import requests, json
@@ -57,6 +56,7 @@ page = int(data['count'] / 80) + 1
 for index in range(1, page + 1):
     print 'try to get page', index
     data = json.loads(requests.get(url.format(index)).text)[0]
+    data["day"] = datetime.datetime.now().strftime('%Y-%m-%d')
     appendItem(data)
 
     time.sleep(3)

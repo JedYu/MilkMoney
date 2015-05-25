@@ -28,7 +28,7 @@ class BOLL():
     def getOHLC(self, num):
 
         results = list(self.__collection.find({'code': self.__code}).limit(num).sort([("day", DESCENDING)]))
-        return map(lambda x: [x["day"], float(x["open"]),float(x["high"]),float(x["low"]),float(x["close"]),long(x["money"])], results[::-1])
+        return map(lambda x: [x["day"], float(x["open"]),float(x["high"]),float(x["low"]),float(x["close"]),long(x["amount"])], results[::-1])
 
 
     def _getCur(self, fromtime):
@@ -42,7 +42,7 @@ class BOLL():
 
     def getAveVol(self, num):
         results = list(self.__collection.find({'code': self.__code}).limit(num).sort([("day", DESCENDING)]))
-        array = [long(x["money"]) for x in results]
+        array = [long(x["amount"]) for x in results]
         return sum(array) / num
 
     def getBOLL(self, num, days):

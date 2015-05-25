@@ -21,7 +21,7 @@ def is_inactive(day, dataset):
     return xday.ctime() != yday.ctime()
 
 class Stock(object):
-    __slots__ = {"code","day", "open", "close", "high", "low", "money"}
+    __slots__ = {"code","day", "open", "close", "high", "low", "volume", "amount"}
 
 class Prediction:
     _collection = None
@@ -48,7 +48,8 @@ class Prediction:
             s.close = float(d['close'])
             s.high = float(d['high'])
             s.low = float(d['low'])
-            s.money = int(d['money'])
+            s.volume = int(d['volume'])
+            s.amount = long(d['amount'])
             ss.append(s)
 
         if len(ss) < self._require_size:
@@ -81,8 +82,9 @@ class MorningStarPrediction(Prediction):
 
         ds = self.get_data(day)
         if ds:
+           
             #第一天长阴线
-            if (ds[2].close - ds[2].open) / ds[2].open > -0.04:
+            if ds[2].open == 0 or  (ds[2].close - ds[2].open) / ds[2].open > -0.04:
                 return False
 
             #第二天下跳
@@ -120,7 +122,7 @@ class RisingStarPrediction(Prediction):
             return False
 
 day = str(datetime.datetime.now().date())
-day = "2015-05-25"
+day = "2015-05-26"
 for stock in stocks.find():
     p = MorningStarPrediction(history, stock['code'])
     if p.predict(day):
