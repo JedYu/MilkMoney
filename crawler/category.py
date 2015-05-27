@@ -14,7 +14,7 @@ stocks = client.stock.stocks
 
 
 for stock in stocks.find():
-    if stock["bk"]:
+    if stock.get("bk", ""):
         continue
 
     code = stock["code"]
