@@ -14,6 +14,9 @@ stocks = client.stock.stocks
 
 
 for stock in stocks.find():
+    if stock["bk"]:
+        continue
+
     code = stock["code"]
     if code.startswith("6"):
         code  = 'sh' + code
@@ -32,7 +35,7 @@ for stock in stocks.find():
             if not bk:
                 break
 
-            print bk.split(',')[1]
+            print stock["name"], bk.split(',')[1]
 
             stock["bk"] = bk.split(',')[1]
             stocks.update_one({'code':stock['code']}, {"$set": stock}, upsert=True)
