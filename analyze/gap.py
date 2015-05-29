@@ -14,6 +14,7 @@ class GAP(StockSignal):
             if not data:
                 continue
             if float(data[0]["high"]) < float(data[1]["low"]):
-                if (float(data[1]["low"]) - float(data[0]["high"])) / float(data[1]["open"]) < 0.10:
-                    print s["code"], data[0]["day"], (float(data[1]["low"]) - float(data[0]["high"])) / float(data[1]["open"])
+                if float(data[0]["close"]) >= float(data[0]["open"]):
+                    if 0.01 < (float(data[1]["low"]) - float(data[0]["high"])) / float(data[1]["open"]) < 0.10:
+                        print s["code"], s["name"], s["bk"], data[0]["day"], (float(data[1]["low"]) - float(data[0]["high"])) / float(data[1]["open"])
 

@@ -122,11 +122,11 @@ class RisingStarPrediction(Prediction):
             return False
 
 day = str(datetime.datetime.now().date())
-day = "2015-05-26"
+day = "2015-05-30"
 for stock in stocks.find():
     p = MorningStarPrediction(history, stock['code'])
     if p.predict(day):
-        print stock['code']
+        print stock['code'], stock['name'], stock['bk']
 
 
 test = False

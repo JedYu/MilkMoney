@@ -78,10 +78,10 @@ for s in stocks.find():
         y = xs[-2]
 
         if x[4] < x[8] and y[4] > y[8] and math.fabs((y[4] - x[4]) / y[4]) < 0.1:
-            print "cross down:", s["code"], s["name"], x[0]
+            print "cross down:", s["code"], s["name"], s['bk'], x[0]
 
         if x[4] > x[8] and y[4] < y[8] and math.fabs((y[4] - x[4]) / y[4]) < 0.1 and x[5] > boll.getAveVol(7) * 2:
-            print "cross up dn:", s["code"], s["name"], x[0]
+            print "cross up dn:", s["code"], s["name"], s['bk'],x[0]
 
         if x[4] > x[6] and y[4] < y[6] and math.fabs((y[4] - x[4]) / y[4]) < 0.1 and x[5] > boll.getAveVol(7) * 2:
-            print "cross up mb:", s["code"], s["name"], x[0]
+            print "cross up mb:", s["code"], s["name"], s['bk'], x[0]

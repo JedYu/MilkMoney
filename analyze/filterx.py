@@ -31,9 +31,8 @@ def filter_long_under_shadow(dataset):
 
     lastday = datetime.datetime.strptime(dataset[0]['day'], '%Y-%m-%d')
     yestoday = datetime.datetime.strptime(dataset[1]['day'], '%Y-%m-%d')
-
-    if yestoday.ctime() < (lastday - datetime.timedelta(days=7)).ctime():
-        return False
+    if time.mktime(yestoday.timetuple()) < time.mktime((lastday - datetime.timedelta(days=7)).timetuple()):
+	return False
 
 
     # if float(dataset[2]['close']) < float(dataset[1]['close']):
@@ -43,7 +42,7 @@ def filter_long_under_shadow(dataset):
     close = float(dataset[0]['close'])
     high = float(dataset[0]['high'])
     low = float(dataset[0]['low'])
-    money = int(dataset[0]['money'])
+    money = int(dataset[0]['volume'])
 
     if open > float(dataset[1]['close']):
         return False
@@ -51,13 +50,13 @@ def filter_long_under_shadow(dataset):
     # if close < float(dataset[1]['low']) :
     # return False
 
-    if (float(dataset[1]['low']) - open ) / float(dataset[1]['low']) > 0.1:
+    if float(dataset[1]['low']) == 0 or (float(dataset[1]['low']) - open ) / float(dataset[1]['low']) > 0.1:
         return False
 
     if open < close:
         return False
 
-    if  int(dataset[1]['money']) < money and open > close:
+    if  int(dataset[1]['volume']) < money and open > close:
         return False
 
     under = close - low
@@ -187,21 +186,20 @@ class MorningStarFilter(Filter):
 
 
 
-day = '2015-05-17'
+day = '2015-05-29'
 
 success = 0
 fail = 0
 l = []
 for stock in stocks.find():
-
-    try:
+    if True:
+    #try:
         dataset = list(history.find({'code': stock['code'], "day": {"$lte": day}}).limit(7).sort([("day", DESCENDING)]))
 
         if is_inactive(day, dataset):
             continue
 
         prev_close = float(dataset[0]['close'])
-
         if filter_long_under_shadow(dataset):
             print stock['code'], stock['name']
             l.append(stock['code'])
@@ -213,16 +211,16 @@ for stock in stocks.find():
                         0]
                 if next:
                     pct = ((float(next['close']) - prev_close) / prev_close) * 100
-                    print next['day'], next['money'], next['close'], prev_close, '{:.1f}%'.format(pct)
+                    print next['day'], next['amount'], next['close'], prev_close, '{:.1f}%'.format(pct)
                     if pct >= 0:
                         success += 1
                     else:
                         fail += 1
                 else:
                     print  next
-    except:
-        print 'xxxxxxxxxxxxxx'
-        pass
+    #except Exception as e:
+    #    print e
+    #    pass
 
 print '==========================================================='
 dl = []
