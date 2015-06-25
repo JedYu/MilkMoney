@@ -4,7 +4,11 @@
 from gap import GAP
 from reverse import ReverseSignal
 from weak_down import WeakDownSignal
+from jump_out import JumpOutSignal
 
+
+print '====================== Jump Out Signal ======================'
+JumpOutSignal().check()
 
 print '====================== Weak Down Signal ======================'
 WeakDownSignal().check()
